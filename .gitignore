@@ -1,3 +1,6 @@
+.vscode
+.clangd
+compile_commands.json
 build
 bin
 xcode/valijson.xcodeproj/project.xcworkspace
