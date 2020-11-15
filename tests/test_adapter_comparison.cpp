@@ -13,6 +13,7 @@
 #include <valijson/utils/nlohmann_json_utils.hpp>
 #include <valijson/utils/picojson_utils.hpp>
 #include <valijson/utils/rapidjson_utils.hpp>
+#include <valijson/utils/experimental_utils.hpp>
 
 #ifdef VALIJSON_BUILD_PROPERTY_TREE_ADAPTER
 #include <valijson/adapters/property_tree_adapter.hpp>
@@ -98,8 +99,12 @@ protected:
       const bool expectedStrict = (item1.m_strictGroup == item2.m_strictGroup);
       const bool expectedLoose = (item1.m_looseGroup == item2.m_looseGroup);
 
-      typename AdapterTraits<Adapter1>::DocumentType document1;
+      using DocumentType1 = typename AdapterTraits<Adapter1>::DocumentType;
+      DocumentType1 document1;
       ASSERT_TRUE(valijson::utils::loadDocument(item1.m_path, document1));
+      optional<DocumentType1> result = valijson::utils::loadDocumentExperimental<DocumentType1>(item1.m_path);
+      ASSERT_TRUE(bool(result));
+
       const Adapter1 adapter1(document1);
       const std::string adapter1Name = AdapterTraits<Adapter1>::adapterName();
 
@@ -149,77 +154,6 @@ TEST_F(TestAdapterComparison, JsonCppVsPicoJson) {
                  valijson::adapters::PicoJsonAdapter>();
 }
 
-#ifdef VALIJSON_BUILD_PROPERTY_TREE_ADAPTER
-
-TEST_F(TestAdapterComparison, JsonCppVsPropertyTree) {
-  testComparison<valijson::adapters::JsonCppAdapter,
-                 valijson::adapters::PropertyTreeAdapter>();
-}
-
-#endif
-
-TEST_F(TestAdapterComparison, JsonCppVsRapidJson) {
-  testComparison<valijson::adapters::JsonCppAdapter,
-                 valijson::adapters::RapidJsonAdapter>();
-}
-
-TEST_F(TestAdapterComparison, JsonCppVsRapidJsonCrtAlloc) {
-  testComparison<
-      valijson::adapters::JsonCppAdapter,
-      valijson::adapters::GenericRapidJsonAdapter<rapidjson::GenericValue<
-          rapidjson::UTF8<>, rapidjson::CrtAllocator>>>();
-}
-
-//
-// PropertyTreeAdapter vs X
-// ------------------------------------------------------------------------------------------------
-
-#ifdef VALIJSON_BUILD_PROPERTY_TREE_ADAPTER
-
-TEST_F(TestAdapterComparison, PropertyTreeVsPicoJson) {
-  testComparison<valijson::adapters::PropertyTreeAdapter,
-                 valijson::adapters::PicoJsonAdapter>();
-}
-
-TEST_F(TestAdapterComparison, PropertyTreeVsPropertyTree) {
-  testComparison<valijson::adapters::PropertyTreeAdapter,
-                 valijson::adapters::PropertyTreeAdapter>();
-}
-
-TEST_F(TestAdapterComparison, PropertyTreeVsRapidJson) {
-  testComparison<valijson::adapters::PropertyTreeAdapter,
-                 valijson::adapters::RapidJsonAdapter>();
-}
-
-TEST_F(TestAdapterComparison, PropertyTreeVsRapidJsonCrtAlloc) {
-  testComparison<
-      valijson::adapters::PropertyTreeAdapter,
-      valijson::adapters::GenericRapidJsonAdapter<rapidjson::GenericValue<
-          rapidjson::UTF8<>, rapidjson::CrtAllocator>>>();
-}
-
-#endif
-
-//
-// RapidJson vs X
-// ------------------------------------------------------------------------------------------------
-
-TEST_F(TestAdapterComparison, RapidJsonVsRapidJson) {
-  testComparison<valijson::adapters::RapidJsonAdapter,
-                 valijson::adapters::RapidJsonAdapter>();
-}
-
-TEST_F(TestAdapterComparison, RapidJsonVsRapidJsonCrtAlloc) {
-  testComparison<
-      valijson::adapters::RapidJsonAdapter,
-      valijson::adapters::GenericRapidJsonAdapter<rapidjson::GenericValue<
-          rapidjson::UTF8<>, rapidjson::CrtAllocator>>>();
-}
-
-TEST_F(TestAdapterComparison, RapidJsonVsPicoJson) {
-  testComparison<valijson::adapters::RapidJsonAdapter,
-                 valijson::adapters::PicoJsonAdapter>();
-}
 
 //
 // PicoJsonAdapter vs X
@@ -230,20 +164,6 @@ TEST_F(TestAdapterComparison, PicoJsonVsPicoJson) {
                  valijson::adapters::PicoJsonAdapter>();
 }
 
-TEST_F(TestAdapterComparison, PicoJsonVsRapidJsonCrtAlloc) {
-  testComparison<
-      valijson::adapters::PicoJsonAdapter,
-      valijson::adapters::GenericRapidJsonAdapter<rapidjson::GenericValue<
-          rapidjson::UTF8<>, rapidjson::CrtAllocator>>>();
-}
-
-TEST_F(TestAdapterComparison, RapidJsonCrtAllocVsRapidJsonCrtAlloc) {
-  testComparison<
-      valijson::adapters::GenericRapidJsonAdapter<
-          rapidjson::GenericValue<rapidjson::UTF8<>, rapidjson::CrtAllocator>>,
-      valijson::adapters::GenericRapidJsonAdapter<rapidjson::GenericValue<
-          rapidjson::UTF8<>, rapidjson::CrtAllocator>>>();
-}
 
 //
 // Json11Adapter vs X
@@ -259,31 +179,14 @@ TEST_F(TestAdapterComparison, Json11VsJsonCpp) {
                  valijson::adapters::JsonCppAdapter>();
 }
 
-TEST_F(TestAdapterComparison, Json11VsRapidJson) {
-  testComparison<valijson::adapters::Json11Adapter,
-                 valijson::adapters::RapidJsonAdapter>();
-}
 
-TEST_F(TestAdapterComparison, Json11VsRapidJsonCrtAlloc) {
-  testComparison<
-      valijson::adapters::Json11Adapter,
-      valijson::adapters::GenericRapidJsonAdapter<rapidjson::GenericValue<
-          rapidjson::UTF8<>, rapidjson::CrtAllocator>>>();
-}
+
 
 TEST_F(TestAdapterComparison, Json11VsPicoJson) {
   testComparison<valijson::adapters::Json11Adapter,
                  valijson::adapters::PicoJsonAdapter>();
 }
 
-#ifdef VALIJSON_BUILD_PROPERTY_TREE_ADAPTER
-
-TEST_F(TestAdapterComparison, Json11VsPropertyTree) {
-  testComparison<valijson::adapters::Json11Adapter,
-                 valijson::adapters::PropertyTreeAdapter>();
-}
-
-#endif // VALIJSON_BUILD_PROPERTY_TREE_ADAPTER
 
 //
 // NlohmannJsonAdapter vs X
@@ -304,85 +207,12 @@ TEST_F(TestAdapterComparison, NlohmannJsonVsJsonCpp) {
                  valijson::adapters::JsonCppAdapter>();
 }
 
-TEST_F(TestAdapterComparison, NlohmannJsonVsRapidJson) {
-  testComparison<valijson::adapters::NlohmannJsonAdapter,
-                 valijson::adapters::RapidJsonAdapter>();
-}
 
-TEST_F(TestAdapterComparison, NlohmannJsonVsRapidJsonCrtAlloc) {
-  testComparison<
-      valijson::adapters::NlohmannJsonAdapter,
-      valijson::adapters::GenericRapidJsonAdapter<rapidjson::GenericValue<
-          rapidjson::UTF8<>, rapidjson::CrtAllocator>>>();
-}
 
 TEST_F(TestAdapterComparison, NlohmannJsonVsPicoJson) {
   testComparison<valijson::adapters::NlohmannJsonAdapter,
                  valijson::adapters::PicoJsonAdapter>();
 }
-
-#ifdef VALIJSON_BUILD_PROPERTY_TREE_ADAPTER
-
-TEST_F(TestAdapterComparison, NlohmannJsonVsPropertyTree) {
-  testComparison<valijson::adapters::NlohmannJsonAdapter,
-                 valijson::adapters::PropertyTreeAdapter>();
-}
-
-#endif // VALIJSON_BUILD_PROPERTY_TREE_ADAPTER
-
-//
-// QtJsonAdapter vs X
-// ------------------------------------------------------------------------------------------------
-
-#ifdef VALIJSON_BUILD_QT_ADAPTER
-
-TEST_F(TestAdapterComparison, QtJsonVsQtJson) {
-  testComparison<valijson::adapters::QtJsonAdapter,
-                 valijson::adapters::QtJsonAdapter>();
-}
-
-TEST_F(TestAdapterComparison, QtJsonVsJsonCpp) {
-  testComparison<valijson::adapters::QtJsonAdapter,
-                 valijson::adapters::JsonCppAdapter>();
-}
-
-TEST_F(TestAdapterComparison, QtJsonVsRapidJson) {
-  testComparison<valijson::adapters::QtJsonAdapter,
-                 valijson::adapters::RapidJsonAdapter>();
-}
-
-TEST_F(TestAdapterComparison, QtJsonVsRapidJsonCrtAlloc) {
-  testComparison<
-      valijson::adapters::QtJsonAdapter,
-      valijson::adapters::GenericRapidJsonAdapter<rapidjson::GenericValue<
-          rapidjson::UTF8<>, rapidjson::CrtAllocator>>>();
-}
-
-TEST_F(TestAdapterComparison, QtJsonVsPicoJson) {
-  testComparison<valijson::adapters::QtJsonAdapter,
-                 valijson::adapters::PicoJsonAdapter>();
-}
-
-#ifdef VALIJSON_BUILD_PROPERTY_TREE_ADAPTER
-
-TEST_F(TestAdapterComparison, QtJsonVsPropertyTree) {
-  testComparison<valijson::adapters::QtJsonAdapter,
-                 valijson::adapters::PropertyTreeAdapter>();
-}
-
-#endif // VALIJSON_BUILD_PROPERTY_TREE_ADAPTER
-
-TEST_F(TestAdapterComparison, QtJsonVsJson11) {
-  testComparison<valijson::adapters::QtJsonAdapter,
-                 valijson::adapters::Json11Adapter>();
-}
-
-TEST_F(TestAdapterComparison, QtJsonVsNlohmannJson) {
-  testComparison<valijson::adapters::QtJsonAdapter,
-                 valijson::adapters::NlohmannJsonAdapter>();
-}
-
-#endif // VALIJSON_BUILD_QT_ADAPTER
 
 //
 // PocoJsonAdapter vs X
@@ -400,31 +230,13 @@ TEST_F(TestAdapterComparison, PocoJsonVsJsonCpp) {
                  valijson::adapters::JsonCppAdapter>();
 }
 
-TEST_F(TestAdapterComparison, PocoJsonVsRapidJson) {
-  testComparison<valijson::adapters::PocoJsonAdapter,
-                 valijson::adapters::RapidJsonAdapter>();
-}
 
-TEST_F(TestAdapterComparison, PocoJsonVsRapidJsonCrtAlloc) {
-  testComparison<
-      valijson::adapters::PocoJsonAdapter,
-      valijson::adapters::GenericRapidJsonAdapter<rapidjson::GenericValue<
-          rapidjson::UTF8<>, rapidjson::CrtAllocator>>>();
-}
 
 TEST_F(TestAdapterComparison, PocoJsonVsPicoJson) {
   testComparison<valijson::adapters::PocoJsonAdapter,
                  valijson::adapters::PicoJsonAdapter>();
 }
 
-#ifdef VALIJSON_BUILD_PROPERTY_TREE_ADAPTER
-
-TEST_F(TestAdapterComparison, PocoJsonVsPropertyTree) {
-  testComparison<valijson::adapters::PocoJsonAdapter,
-                 valijson::adapters::PropertyTreeAdapter>();
-}
-
-#endif // VALIJSON_BUILD_PROPERTY_TREE_ADAPTER
 
 TEST_F(TestAdapterComparison, PocoJsonVsJson11) {
   testComparison<valijson::adapters::PocoJsonAdapter,
@@ -435,14 +247,5 @@ TEST_F(TestAdapterComparison, PocoJsonVsNlohmannJsonAdapter) {
   testComparison<valijson::adapters::PocoJsonAdapter,
                  valijson::adapters::NlohmannJsonAdapter>();
 }
-
-#ifdef VALIJSON_BUILD_QT_ADAPTER
-
-TEST_F(TestAdapterComparison, PocoJsonVsQtJson) {
-  testComparison<valijson::adapters::PocoJsonAdapter,
-                 valijson::adapters::QtJsonAdapter>();
-}
-
-#endif // VALIJSON_BUILD_QT_ADAPTER
 
 #endif // VALIJSON_BUILD_POCO_ADAPTER
